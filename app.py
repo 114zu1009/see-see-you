@@ -48,10 +48,13 @@ location_map = {
 
 
 # ========================
-# 預測函式
+# 預測函式（核心 - 修正版）
 # ========================
 def predict_image(image):
-    img = image.resize((224, 224))
+    # ⭐ 關鍵修正：強制將圖片轉為 RGB 3通道，避免手機照片的 RGBA 導致預測出錯
+    img = image.convert("RGB")
+
+    img = img.resize((224, 224))
     img_array = np.array(img) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
@@ -61,7 +64,6 @@ def predict_image(image):
     predicted_class = class_names[predicted_index]
 
     return predicted_class, max_prob, prediction
-
 
 # ========================
 # UI 設計
@@ -74,13 +76,20 @@ st.caption("Upload a photo to identify the location 📚")
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
 
 # ========================
-# 主流程
+# 主流程（修正版）
 # ========================
 if uploaded_file:
     image = Image.open(uploaded_file)
+
+    # ⭐ 關鍵修正：自動根據手機照片的 EXIF 標籤修正旋轉角度
+    from PIL import ImageOps
+
+    image = ImageOps.exif_transpose(image)
+
     st.image(image, caption="Uploaded Image", use_column_width=True)
 
     predicted_class, confidence, prediction = predict_image(image)
+    # ... 底下的顯示程式碼維持原樣 ...
 
     st.subheader("🔍 Prediction Result")
 

@@ -18,6 +18,9 @@ def load_my_model():
 
 model = load_my_model()
 
+# ⭐ 在這裡加入這一行！讓它把結構印在後台日誌裡
+model.summary()
+
 # ========================
 # 類別名稱
 # ========================
@@ -76,20 +79,27 @@ st.caption("Upload a photo to identify the location 📚")
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
 
 # ========================
-# 主流程（修正版）
+# 主流程（終極防呆縮圖版）
 # ========================
 if uploaded_file:
     image = Image.open(uploaded_file)
 
-    # ⭐ 關鍵修正：自動根據手機照片的 EXIF 標籤修正旋轉角度
+    # 1. 修正旋轉角度
     from PIL import ImageOps
 
     image = ImageOps.exif_transpose(image)
 
+    # ⭐ 關鍵追加：如果照片太大（例如寬度大於 1000 像素），立刻等比例縮小！
+    # 這能徹底解決大型手機照片導致網頁崩潰或卡住、丟不進去的問題
+    max_size = 1000
+    if max(image.size) > max_size:
+        image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+
+    # 顯示縮小後的預覽圖（既省流量、速度又快）
     st.image(image, caption="Uploaded Image", use_column_width=True)
 
+    # 進行預測
     predicted_class, confidence, prediction = predict_image(image)
-    # ... 底下的顯示程式碼維持原樣 ...
 
     st.subheader("🔍 Prediction Result")
 
